@@ -1,0 +1,28 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+  /* 기획서에 나온 Glassmorphism 스타일 */
+  .glass {
+    @apply bg-white/15 backdrop-blur-md border border-white/20 rounded-2xl;
+  }
+  .glass-dark {
+    @apply bg-black/40 backdrop-blur-md border border-white/10 rounded-2xl;
+  }
+}
+
+/* AR 화면이 전체를 덮도록 */
+html, body, #root {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  overflow: hidden;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* A-Frame이 만드는 video 요소 보정 */
+.a-canvas {
+  width: 100% !important;
+  height: 100% !important;
+}
