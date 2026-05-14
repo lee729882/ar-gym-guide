@@ -18,8 +18,66 @@ function getMuscleColor(name, eq) {
  * 스틱맨 → 머리/목/어깨/가슴/팔/다리/발 모두 포함한 실루엣.
  */
 function buildBodyHTML(eq) {
-  const color = eq.primary[0] === '이두근' ? '#EF4444' : '#3B82F6'
-  return `<a-sphere position="0 1 0" radius="0.5" material="color: ${color}; shader: flat;"></a-sphere>`
+  const chest = getMuscleColor('대흉근', eq)
+  const back = getMuscleColor('광배근', eq)
+  const bicep = getMuscleColor('이두근', eq)
+  const tricep = getMuscleColor('삼두근', eq)
+  const forearm = getMuscleColor('전완근', eq)
+  const delt = getMuscleColor('삼각근', eq)
+  const frontDelt = getMuscleColor('전면 삼각근', eq) !== SKIN ? getMuscleColor('전면 삼각근', eq) : delt
+  const rearDelt = getMuscleColor('후면 삼각근', eq) !== SKIN ? getMuscleColor('후면 삼각근', eq) : delt
+
+  return `
+    <!-- ── 머리 / 목 ── -->
+    <a-sphere position="0 2.05 0" radius="0.18" color="${SKIN}"></a-sphere>
+    <a-cylinder position="0 1.88 0" radius="0.055" height="0.12" color="${SKIN}"></a-cylinder>
+
+    <!-- ── 몸통 (어깨→허리→골반 테이퍼) ── -->
+    <a-box position="0 1.62 0" width="0.60" height="0.18" depth="0.26" color="${SKIN}"></a-box>
+    <a-box position="0 1.43 0" width="0.50" height="0.22" depth="0.24" color="${SKIN}"></a-box>
+    <a-box position="0 1.23 0" width="0.42" height="0.20" depth="0.22" color="${SKIN}"></a-box>
+    <a-box position="0 1.07 0" width="0.50" height="0.16" depth="0.26" color="${SKIN}"></a-box>
+
+    <!-- ── 근육 패치: 가슴(앞) / 등(뒤) ── -->
+    <a-box position="0 1.52 0.13" width="0.44" height="0.26" depth="0.02" color="${chest}"></a-box>
+    <a-box position="0 1.40 -0.13" width="0.44" height="0.40" depth="0.02" color="${back}"></a-box>
+
+    <!-- ── 어깨(삼각근) ── -->
+    <a-sphere position="-0.33 1.65 0" radius="0.10" color="${frontDelt}"></a-sphere>
+    <a-sphere position=" 0.33 1.65 0" radius="0.10" color="${frontDelt}"></a-sphere>
+
+    <!-- ── 왼팔: 상완 + 이두(앞) + 삼두(뒤) ── -->
+    <a-cylinder position="-0.39 1.38 0" radius="0.068" height="0.44" color="${SKIN}"></a-cylinder>
+    <a-box position="-0.39 1.38  0.073" width="0.10" height="0.34" depth="0.02" color="${bicep}"></a-box>
+    <a-box position="-0.39 1.38 -0.073" width="0.10" height="0.34" depth="0.02" color="${tricep}"></a-box>
+    <!-- 팔꿈치 -->
+    <a-sphere position="-0.39 1.14 0" radius="0.052" color="${SKIN}"></a-sphere>
+
+    <!-- ── 오른팔 ── -->
+    <a-cylinder position=" 0.39 1.38 0" radius="0.068" height="0.44" color="${SKIN}"></a-cylinder>
+    <a-box position=" 0.39 1.38  0.073" width="0.10" height="0.34" depth="0.02" color="${bicep}"></a-box>
+    <a-box position=" 0.39 1.38 -0.073" width="0.10" height="0.34" depth="0.02" color="${tricep}"></a-box>
+    <a-sphere position=" 0.39 1.14 0" radius="0.052" color="${SKIN}"></a-sphere>
+
+    <!-- ── 전완 + 손 ── -->
+    <a-cylinder position="-0.39 0.90 0" radius="0.052" height="0.40" color="${forearm}"></a-cylinder>
+    <a-cylinder position=" 0.39 0.90 0" radius="0.052" height="0.40" color="${forearm}"></a-cylinder>
+    <a-box position="-0.39 0.65 0" width="0.08" height="0.12" depth="0.05" color="${SKIN}"></a-box>
+    <a-box position=" 0.39 0.65 0" width="0.08" height="0.12" depth="0.05" color="${SKIN}"></a-box>
+
+    <!-- ── 허벅지 ── -->
+    <a-cylinder position="-0.15 0.72 0" radius="0.098" height="0.44" color="${SKIN}"></a-cylinder>
+    <a-cylinder position=" 0.15 0.72 0" radius="0.098" height="0.44" color="${SKIN}"></a-cylinder>
+    <!-- 무릎 -->
+    <a-sphere position="-0.15 0.48 0" radius="0.065" color="${SKIN}"></a-sphere>
+    <a-sphere position=" 0.15 0.48 0" radius="0.065" color="${SKIN}"></a-sphere>
+
+    <!-- ── 종아리 + 발 ── -->
+    <a-cylinder position="-0.14 0.22 0" radius="0.062" height="0.40" color="${SKIN}"></a-cylinder>
+    <a-cylinder position=" 0.14 0.22 0" radius="0.062" height="0.40" color="${SKIN}"></a-cylinder>
+    <a-box position="-0.13 0.02 0.06" width="0.10" height="0.06" depth="0.22" color="${SKIN}"></a-box>
+    <a-box position=" 0.13 0.02 0.06" width="0.10" height="0.06" depth="0.22" color="${SKIN}"></a-box>
+  `
 }
 
 /**
@@ -93,6 +151,7 @@ export default function ExperiencePhase({ onComplete }) {
       {/* AR 레이어 */}
       <div
         ref={containerRef}
+        className="fixed inset-0"
         dangerouslySetInnerHTML={{ __html: buildSceneHTML(equipmentList) }}
       />
 
