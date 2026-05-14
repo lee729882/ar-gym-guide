@@ -1,32 +1,46 @@
 /**
- * 3D 근육 터치 시 팝업.
- * AR 화면을 가리되, 닫으면 즉시 복귀할 수 있도록 가볍게 처리.
+ * 근육 상세 팝업.
+ * 바깥 영역 탭으로 닫기. 모달 안에서 e.stopPropagation으로 닫힘 방지.
  */
 export default function MusclePopup({ muscle, equipment, onClose }) {
   const isPrimary = muscle.role === '주동근'
+  const badgeClass = isPrimary
+    ? 'bg-red-500/20 text-red-300 border-red-500/30'
+    : 'bg-amber-500/15 text-amber-300 border-amber-500/30'
 
   return (
-    <div className="absolute inset-0 bg-black/50 z-50 flex items-end sm:items-center justify-center p-4"
-         onClick={onClose}>
-      <div className="bg-slate-800 text-white rounded-2xl w-full max-w-sm p-5 space-y-3"
-           onClick={(e) => e.stopPropagation()}>
+    <div
+      className="absolute inset-0 bg-black/60 backdrop-blur-sm z-50
+                 flex items-end sm:items-center justify-center p-4"
+      onClick={onClose}>
+      <div
+        className="bg-slate-900 border border-white/10 text-white
+                   rounded-2xl w-full max-w-sm p-6 space-y-4 shadow-2xl"
+        onClick={(e) => e.stopPropagation()}>
 
-        <div className="flex items-center gap-2">
-          <span className={`w-3 h-3 rounded-full ${
-            isPrimary ? 'bg-red-500' : 'bg-yellow-400'
+        {/* 역할 배지 */}
+        <div className={`inline-flex items-center gap-2 ${badgeClass} border
+                         px-3 py-1 rounded-full text-xs font-medium`}>
+          <span className={`w-1.5 h-1.5 rounded-full ${
+            isPrimary ? 'bg-red-500' : 'bg-amber-400'
           }`}></span>
-          <span className="text-xs text-white/60">{muscle.role}</span>
+          {muscle.role}
         </div>
 
-        <h3 className="text-2xl font-bold">{muscle.name}</h3>
+        {/* 근육명 */}
+        <h3 className="text-2xl font-bold tracking-tight">{muscle.name}</h3>
 
-        <p className="text-sm text-white/80 leading-relaxed">
-          {equipment.tips}
-        </p>
+        {/* 주의사항 */}
+        <div className="space-y-1.5">
+          <p className="text-xs text-slate-500 uppercase tracking-wider">운동 시 주의</p>
+          <p className="text-sm text-slate-300 leading-relaxed">{equipment.tips}</p>
+        </div>
 
+        {/* 닫기 버튼 */}
         <button
           onClick={onClose}
-          className="w-full bg-white/10 active:bg-white/20 py-3 rounded-xl text-sm">
+          className="w-full bg-white/10 hover:bg-white/15 active:scale-[0.98]
+                     py-3 rounded-xl text-sm font-medium transition-all">
           닫기
         </button>
       </div>

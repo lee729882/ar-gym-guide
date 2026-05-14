@@ -1,32 +1,35 @@
 /**
  * 기구별 데이터.
- * markerPreset: AR.js의 마커 식별자 ('hiro' | 'kanji' | 'custom URL')
- * primary: 주동근 (빨강으로 하이라이트)
- * secondary: 협응근 (노랑으로 하이라이트)
- * 추후 .patt 파일로 기구마다 고유 마커 만들 수 있음
+ * marker.type: 'preset' (hiro/kanji) 또는 'pattern' (.patt 파일)
+ * marker.value: preset 이름 또는 .patt 파일 URL
  */
 export const equipmentList = [
   {
-    id: 'bench-press',
-    name: '벤치프레스',
-    markerPreset: 'hiro',
-    routine: '가슴 + 삼두',
-    primary: ['chest'],     // 대흉근
-    secondary: ['triceps'], // 삼두근
-    tips: '바벨을 내릴 때 팔꿈치를 몸쪽으로 내리며, 허리가 과도하게 들리지 않도록 주의하세요.',
-    videoUrl: '/videos/bench-press.mp4',
+    id: 'dumbbell-curl',
+    name: '덤벨 컬',
+    marker: {
+      type: 'pattern',
+      value: '/markers/dumbbell-curl.patt',
+    },
+    routine: '팔 + 이두',
+    primary: ['이두근'],
+    secondary: ['전완근'],
+    tips: '팔꿈치를 몸통에 고정하고 흔들리지 않도록 합니다. 반동을 사용하지 않고, 덤벨을 내릴 때도 천천히 통제하며 내려야 효과적입니다.',
+    videoUrl: '/videos/dumbbell-curl.mp4',
   },
   {
-    id: 'lat-pulldown',
-    name: '랫풀다운',
-    markerPreset: 'kanji',
+    id: 'pull-up',
+    name: '풀업 (턱걸이)',
+    marker: {
+      type: 'pattern',
+      value: '/markers/pull-up.patt',
+    },
     routine: '등 + 이두',
-    primary: ['back'],
-    secondary: ['biceps'],
-    tips: '어깨를 내리고 가슴을 펴며, 팔이 아닌 등으로 당긴다는 느낌으로 수행하세요.',
-    videoUrl: '/videos/lat-pulldown.mp4',
+    primary: ['광배근'],
+    secondary: ['이두근', '후면 삼각근'],
+    tips: '어깨를 끌어내리고 가슴을 펴며, 가슴을 바에 가까이 가져간다는 느낌으로 당깁니다. 반동을 사용하지 않습니다.',
+    videoUrl: '/videos/pull-up.mp4',
   },
 ]
 
-// 발표 데모에선 첫 번째 기구 하나만 잘 작동시키는 게 핵심
 export const demoEquipment = equipmentList[0]
