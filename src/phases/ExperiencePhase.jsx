@@ -98,15 +98,17 @@ function buildSceneHTML(items) {
   }).join('')
 
   return `
-    <a-scene
-      embedded
-      arjs="sourceType: webcam; debugUIEnabled: false;"
-      renderer="logarithmicDepthBuffer: true; antialias: true;"
-      vr-mode-ui="enabled: false">
-      ${markersHTML}
-      <a-entity camera></a-entity>
-    </a-scene>
-  `
+  <a-scene
+    embedded
+    arjs="sourceType: webcam; debugUIEnabled: false;"
+    renderer="logarithmicDepthBuffer: false; antialias: false;"
+    vr-mode-ui="enabled: false">
+    <a-light type="ambient" color="#ffffff" intensity="1.0"></a-light>
+    <a-light type="directional" color="#ffffff" intensity="0.8" position="1 2 1"></a-light>
+    ${markersHTML}
+    <a-entity camera></a-entity>
+  </a-scene>
+`
 }
 
 export default function ExperiencePhase({ onComplete }) {
