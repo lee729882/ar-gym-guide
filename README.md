@@ -1,127 +1,103 @@
-# Web AR 헬스 가이드 - 스타터
-
-기획서 기반 MVP 스타터 프로젝트.
-입장(EntryPhase) → 진행(ExperiencePhase, AR) → 종료(ExitPhase) 3단계 구조로 작성됨.
-
----
-
-## 0. 사전 준비 (10분)
-
-### Node.js 설치 확인
-```bash
-node -v   # v18 이상이면 OK
-npm -v
+💪 AR Gym Guide: Web 기반 AR 헬스 기구 가이드
+![React](https://img.shields.io/badge/React-61DAFB?style=for-the-badge&logo=react&logoColor=black)
+![Vite](https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white)
+![A-Frame](https://img.shields.io/badge/A--Frame-EF2D5E?style=for-the-badge&logo=a-frame&logoColor=white)
+![AR.js](https://img.shields.io/badge/AR.js-FF6B35?style=for-the-badge&logo=javascript&logoColor=white)
+![TailwindCSS](https://img.shields.io/badge/TailwindCSS-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white)
+![Vercel](https://img.shields.io/badge/Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white)
+> **"기구 앞에서 스마트폰을 들면, 자극할 근육이 3D로 보입니다."**
+> <br/>앱 설치 없이 브라우저만으로 실행되는 Web AR 헬스 가이드.
+> 기구별 커스텀 마커를 인식하면 **Low-poly 3D 인체 모델** 위에 주동근·협응근이 실시간으로 하이라이트되며, 터치 드래그로 360° 탐색할 수 있는 **올인원 운동 자세 가이드**
+🔗 배포 URL: https://ar-gym-guide.vercel.app
+<br/>
+📸 프로젝트 시연 (Screenshots)
+시작 화면	AR 인식 (풀업)	AR 인식 (덤벨컬)	영상 모달
+EntryPhase	광배근 하이라이트	이두근 하이라이트	YouTube 시범 영상
+<br/>
+📌 주요 기능 (Key Features)
+🎯 기구별 Web AR 근육 시각화
+`generate-patt.js`로 직접 생성한 커스텀 AR 마커(DC: 덤벨컬, PU: 풀업)를 카메라로 인식하면, Quaternius Low-poly GLB 인체 모델이 마커 위에 실시간 증강됨
+`MUSCLE_OVERLAYS` 딕셔너리로 근육 11그룹(주동근 빨강·협응근 노랑)의 3D 좌표·크기·방향을 실기기 반복 테스트로 수동 캘리브레이션
+🔄 터치 드래그 3D 회전 (drag-rotate)
+A-Frame 커스텀 컴포넌트 `drag-rotate`를 직접 구현하여 사용자가 3D 인체 모델을 앞·뒤·옆 방향으로 자유롭게 탐색 가능
+AR 마커 트래킹과 완전히 분리된 독립 회전 처리
+▶️ YouTube 운동 시범 영상 모달
+`자세 영상 보기` 버튼 클릭 시 기구별 올바른 운동 자세 YouTube 영상이 모달로 즉시 재생
+📱 3단계 UX 플로우
+`EntryPhase`(권한 안내) → `ExperiencePhase`(AR 체험) → `ExitPhase`(근육 요약)의 단방향 State Machine으로 명확한 사용 흐름 제공
+<br/>
+🛠 시스템 구조 (System Architecture)
+React 기반 UI 레이어 위에 A-Frame + AR.js AR 엔진을 `dangerouslySetInnerHTML`로 단일 마운트하여 React 가상 DOM과 A-Frame WebComponent의 충돌 없이 공존하도록 설계했습니다.
 ```
-없다면 https://nodejs.org 에서 LTS 버전 설치.
-
-### HIRO 마커 인쇄
-첫 데모는 AR.js 기본 마커인 HIRO를 사용합니다.
-- https://stemkoski.github.io/AR-Examples/markers/hiro.png 다운로드 후 A4로 인쇄
-- 또는 휴대폰 화면에 띄워두고 다른 폰으로 비춰도 됨
-
----
-
-## 1. 설치 (5분)
-
-```bash
-cd starter
-npm install
+[EntryPhase]  →  [ExperiencePhase]  →  [ExitPhase]
+                      │
+          ┌───────────┼────────────────┐
+          │           │                │
+    A-Frame Scene  MUSCLE_OVERLAYS  React UI
+    (AR.js + GLB)  (11그룹 좌표)   (Popup / Modal)
+          │
+    drag-rotate
+    (커스텀 컴포넌트)
 ```
-
----
-
-## 2. 로컬 실행 (PC 브라우저에서 확인)
-
-```bash
-npm run dev
-```
-`http://localhost:5173` 열고 카메라 권한 허용.
-HIRO 마커를 비추면 3D 스틱맨이 떠야 함.
-
----
-
-## 3. 폰에서 테스트 ⚠️ 중요
-
-**카메라는 HTTPS에서만 동작합니다.** 로컬 IP(http://192.168.x.x) 로는 iOS에서 안 됩니다.
-다음 둘 중 하나:
-
-### 방법 A: Vercel 무료 배포 (추천, 5분)
-1. GitHub에 repo 만들고 푸시
-2. https://vercel.com 가입 → "Import Project" → 해당 repo 선택
-3. Framework Preset을 **Vite**로 자동 인식, Deploy 클릭
-4. 생성된 `https://xxx.vercel.app` URL을 폰에서 열기
-
-### 방법 B: ngrok (임시 터널)
-```bash
-npm install -g ngrok
-npm run dev
-# 새 터미널에서:
-ngrok http 5173
-```
-ngrok이 제공하는 https URL을 폰에서 열기.
-
----
-
-## 4. 코드 구조
-
+<br/>
+⚡ 기술적 도전 및 해결 (Troubleshooting)
+1. GLB 모델 좌표계 분석 및 AR 정렬
+Issue: Blender Z-up 좌표계로 저장된 `Man.glb`를 AR.js 마커 위에 세우면 모델이 뒤집히거나 지면 아래로 가라앉는 문제 발생
+Solution:
+`Python pygltflib`로 바운딩박스를 직접 추출 (`Y: 2.484 ~ 4.045`)하여 Blender Z-up 좌표계임을 확인
+목표 신장 1.8m 기준 `scale=1.153`, 발 정렬을 위한 `position Y=-2.864`, 카메라 방향 보정을 위한 `rotation='0 180 0'`을 수치로 산출하여 적용
+2. MUSCLE_OVERLAYS 수동 좌표 캘리브레이션
+Issue: GLB 모델 위에 근육 오버레이를 올릴 때, 오버레이가 엉뚱한 위치에 렌더링되거나 모델 밖으로 벗어나는 문제
+Solution:
+`MUSCLE_OVERLAYS` 딕셔너리를 정의하고 `position(x y z)·radius·scale·rotation·mirror` 파라미터를 실기기 반복 테스트로 미세조정
+`mirror: true` 속성 구현으로 광배근·삼각근·이두근 등 양측 근육의 X좌표 자동 반전 처리, 코드 중복 제거
+3. A-Frame과 React 가상 DOM 충돌
+Issue: React가 컴포넌트를 재렌더링할 때 `<a-scene>`이 DOM에 재삽입되어 AR.js 카메라 초기화가 중복 실행되고, 카메라 피드가 끊기는 문제 발생
+Solution:
+`useEffect` 내에서 `dangerouslySetInnerHTML`로 `<a-scene>`을 단 한 번만 마운트
+React의 컴포넌트 생명주기와 A-Frame의 WebComponent 초기화를 완전히 분리하여 해결
+<br/>
+⚙️ 기술 스택 (Tech Stack)
+Category	Technology
+Language	JavaScript (ES6+)
+Framework	React 18, Vite 6
+AR / 3D	A-Frame 1.x, AR.js (Marker Tracking)
+3D Asset	Quaternius Man.glb (CC0, poly.pizza)
+Styling	TailwindCSS 3, CSS Glassmorphism
+Deployment	Vercel (HTTPS, GitHub 연동 자동 배포)
+Tools	generate-patt.js (커스텀 마커 생성), pygltflib (GLB 분석)
+<br/>
+📂 프로젝트 구조
 ```
 src/
-├── App.jsx                       ← phase 상태머신
 ├── phases/
-│   ├── EntryPhase.jsx            ← 입장: 안내 + 시작 버튼
-│   ├── ExperiencePhase.jsx       ← 진행: AR 메인 ⭐ 핵심
-│   └── ExitPhase.jsx             ← 종료: 요약 + 다음
+│   ├── EntryPhase.jsx       # 시작 화면 (카메라 권한 안내)
+│   ├── ExperiencePhase.jsx  # AR 체험 화면 (핵심 로직)
+│   └── ExitPhase.jsx        # 종료 화면 (근육 요약)
 ├── components/
-│   ├── TopHeader.jsx
-│   ├── FloatingGuideBar.jsx
-│   ├── MusclePopup.jsx
-│   └── VideoModal.jsx
-└── data/
-    └── equipment.js              ← 기구별 데이터
+│   ├── TopHeader.jsx        # 인식 기구명 헤더
+│   ├── FloatingGuideBar.jsx # 하단 가이드 바
+│   ├── MusclePopup.jsx      # 근육 상세 팝업
+│   └── VideoModal.jsx       # YouTube 영상 모달
+├── data/
+│   └── equipment.js         # 기구별 근육 데이터 및 마커 설정
+public/
+└── models/
+    └── man.glb              # Quaternius Low-poly 인체 모델
 ```
+<br/>
+🚀 실행 방법
+```bash
+# 1. 의존성 설치
+npm install
 
----
+# 2. 개발 서버 실행 (모바일 테스트 시 --host 필수)
+npm run dev --host
 
-## 5. 다음 단계 - 발전시킬 부분
-
-### (1) 진짜 3D 인체 모델로 교체
-현재는 a-sphere/a-box로 만든 스틱맨. Sketchfab에서 CC0 라이선스 .glb 모델 받아서:
-```jsx
-<a-entity gltf-model="url(/models/body.glb)" position="0 0 0" scale="0.5 0.5 0.5"></a-entity>
+# 3. HIRO 마커 또는 커스텀 마커(DC/PU)를 화면에 띄우고 접속
 ```
-public/models/ 에 파일 넣고 위처럼 사용.
-
-### (2) 기구별 커스텀 마커
-HIRO 말고 기구마다 다른 마커 쓰려면:
-- https://ar-js-org.github.io/AR.js-Docs/marker-based/ 의 마커 생성기로 .patt 파일 만들기
-- public/markers/bench-press.patt 으로 저장
-- 코드에서 `preset="custom"` `url="/markers/bench-press.patt"` 사용
-
-### (3) 시범 영상 추가
-public/videos/bench-press.mp4 파일 넣기. 자동으로 모달에 로드됨.
-
-### (4) 근육 색상을 동적으로 (선택)
-지금은 색상이 하드코딩. 기구가 바뀌면 자동으로 다른 근육이 빨개지게 하려면 ExperiencePhase에서 equipment.primary 배열을 보고 ref로 모델 material을 바꾸는 로직 추가.
-
----
-
-## 6. 발표 시연 시나리오 (30초)
-
-1. **0-5초** EntryPhase: "시작하기" 누르며 권한 허용
-2. **5-15초** ExperiencePhase: 마커 비추기 → 3D 인체 등장 → 빨간 가슴/노란 팔 강조
-3. **15-22초** 가슴 터치 → 팝업 → 닫기, 자세 영상 버튼 → 모달 → 닫기
-4. **22-30초** "운동 완료" → ExitPhase 요약 화면 → 다음 기구
-
-이 흐름이 끊김 없이 한 번에 보여지면 발표는 성공.
-
----
-
-## 7. 흔한 문제 트러블슈팅
-
-| 증상 | 원인 | 해결 |
-|---|---|---|
-| 폰에서 카메라가 안 켜짐 | HTTP 접속 | HTTPS 필수 (Vercel/ngrok) |
-| 마커는 인식되는데 3D 모델 안 보임 | scale이 너무 작거나 큼 | scale="0.5 0.5 0.5" 부터 조정 |
-| 마커가 자꾸 놓침 | 조명 반사, 패턴 흐림 | 무광 인쇄, 균일한 조명 |
-| iOS Safari에서 검은 화면 | 카메라 권한 거부 | 설정 → Safari → 카메라 → 허용 |
-| `a-scene`에서 React 경고 | custom element 인식 | 무시해도 됨 (작동에 영향 없음) |
+> ⚠️ 카메라 API는 **HTTPS 환경에서만 작동**합니다. 모바일 테스트 시 Vercel 배포 URL(`https://ar-gym-guide.vercel.app`)을 사용하세요.
+<br/>
+👤 개발자
+이름	소속	역할
+이승철	국립목포대학교 컴퓨터공학과	전체 설계 및 개발
