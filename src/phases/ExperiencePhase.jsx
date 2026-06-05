@@ -65,16 +65,18 @@ function buildBodyHTML(eq) {
   })
 
   return `
-    <!-- ══ GLB 인체 모델 ══ -->
-    <a-entity
-      gltf-model="/models/man.glb"
-      scale="1.153 1.153 1.153"
-      position="0 -2.864 0"
-      rotation="0 180 0">
+    <a-entity class="rotatable-model" rotation="0 0 0">
+      <!-- ══ GLB 인체 모델 ══ -->
+      <a-entity
+        gltf-model="/models/man.glb"
+        scale="1.153 1.153 1.153"
+        position="0 -2.864 0"
+        rotation="0 180 0">
+      </a-entity>
+  
+      <!-- ══ 근육 오버레이 ══ -->
+      ${overlaysHTML}
     </a-entity>
-
-    <!-- ══ 근육 오버레이 ══ -->
-    ${overlaysHTML}
   `
 }
 
@@ -95,6 +97,7 @@ function buildSceneHTML(items) {
   return `
   <a-scene
     embedded
+    drag-rotate
     arjs="sourceType: webcam; debugUIEnabled: false;"
     renderer="logarithmicDepthBuffer: false; antialias: false;"
     vr-mode-ui="enabled: false">
@@ -112,6 +115,86 @@ export default function ExperiencePhase({ onComplete }) {
   const [videoOpen, setVideoOpen] = useState(false)
 
   const containerRef = useRef(null)
+
+  // 터치/마우스 드래그로 3D 모델 회전 기능
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.AFRAME && !window.AFRAME.components['drag-rotate']) {
+      window.AFRAME.registerComponent('drag-rotate', {
+        schema: { speed: { default: 0.5 } },
+        init: function () {
+          this.isDragging = false;
+          this.previousPosition = { x: 0, y: 0 };
+          this.targetEls = [];
+
+          this.onPointerDown = this.onPointerDown.bind(this);
+          this.onPointerMove = this.onPointerMove.bind(this);
+          this.onPointerUp = this.onPointerUp.bind(this);
+
+          const canvas = this.el.sceneEl.canvas;
+          if (canvas) {
+            canvas.addEventListener('mousedown', this.onPointerDown);
+            canvas.addEventListener('touchstart', this.onPointerDown);
+          } else {
+            this.el.sceneEl.addEventListener('loaded', () => {
+              this.el.sceneEl.canvas.addEventListener('mousedown', this.onPointerDown);
+              this.el.sceneEl.canvas.addEventListener('touchstart', this.onPointerDown);
+            });
+          }
+          
+          window.addEventListener('mousemove', this.onPointerMove);
+          window.addEventListener('touchmove', this.onPointerMove, { passive: false });
+          window.addEventListener('mouseup', this.onPointerUp);
+          window.addEventListener('touchend', this.onPointerUp);
+        },
+        updateTargetElements: function () {
+          this.targetEls = Array.from(document.querySelectorAll('.rotatable-model'));
+        },
+        onPointerDown: function (evt) {
+          if (evt.target.nodeName !== 'CANVAS') return;
+          this.isDragging = true;
+          this.updateTargetElements();
+          const clientX = evt.touches ? evt.touches[0].clientX : evt.clientX;
+          const clientY = evt.touches ? evt.touches[0].clientY : evt.clientY;
+          this.previousPosition = { x: clientX, y: clientY };
+        },
+        onPointerMove: function (evt) {
+          if (!this.isDragging) return;
+          if (evt.touches) evt.preventDefault(); // 화면 스크롤 방지
+          
+          const clientX = evt.touches ? evt.touches[0].clientX : evt.clientX;
+          const clientY = evt.touches ? evt.touches[0].clientY : evt.clientY;
+          
+          const deltaX = clientX - this.previousPosition.x;
+          const deltaY = clientY - this.previousPosition.y;
+          
+          this.previousPosition = { x: clientX, y: clientY };
+
+          this.targetEls.forEach(el => {
+            const rotation = el.getAttribute('rotation') || { x: 0, y: 0, z: 0 };
+            // 가로로 드래그하면 Y축 중심 회전, 세로로 드래그하면 X축 중심 회전
+            el.setAttribute('rotation', {
+              x: rotation.x + deltaY * this.data.speed,
+              y: rotation.y + deltaX * this.data.speed,
+              z: rotation.z
+            });
+          });
+        },
+        onPointerUp: function () {
+          this.isDragging = false;
+        },
+        remove: function () {
+          if (this.el.sceneEl && this.el.sceneEl.canvas) {
+            this.el.sceneEl.canvas.removeEventListener('mousedown', this.onPointerDown);
+            this.el.sceneEl.canvas.removeEventListener('touchstart', this.onPointerDown);
+          }
+          window.removeEventListener('mousemove', this.onPointerMove);
+          window.removeEventListener('touchmove', this.onPointerMove);
+          window.removeEventListener('mouseup', this.onPointerUp);
+          window.removeEventListener('touchend', this.onPointerUp);
+        }
+      });
+    }
+  }, []);
 
   useEffect(() => {
     const container = containerRef.current
