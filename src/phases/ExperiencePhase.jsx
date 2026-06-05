@@ -11,30 +11,61 @@ function getMuscleColor(name, eq) {
   return null
 }
 
-/**
- * GLB 하이브리드 모델 v2
- * - rotation="0 180 0" : 모델이 카메라를 정면으로 바라보도록 수정
- * - 앞/뒤 오버레이 Z 좌표 교정 (180도 회전 후 앞=+Z, 뒤=-Z)
- */
+// 쉽게 근육 오버레이를 추가할 수 있는 설정 딕셔너리
+const MUSCLE_OVERLAYS = [
+  // 단일 근육 (가운데)
+  { names: ['대흉근'], position: '0 1.35 0.17', radius: '0.18', scale: '1.1 0.8 0.4' },
+  { names: ['복근', '복부'], position: '0 1.05 0.15', radius: '0.16', scale: '1 1.2 0.5' },
+
+  // 좌우 대칭 근육 (mirror: true 시 오른쪽 좌표 자동 생성)
+  { names: ['광배근'], position: '-0.232 1.118 0.24', radius: '0.22', scale: '1.1 1.7 0.4', mirror: true },
+  { names: ['삼각근'], position: '-0.26 1.42 0', radius: '0.1', scale: '1 1.2 1', mirror: true },
+  { names: ['전면 삼각근'], position: '-0.24 1.42 0.08', radius: '0.08', scale: '1 1.2 1', mirror: true },
+  { names: ['후면 삼각근'], position: '0.665 1.48 0.128', radius: '0.08', scale: '1 1.2 1', mirror: true },
+  { names: ['이두근', '삼두근'], position: '0.664 0.996 -0.313', radius: '0.08', scale: '2 2 1', rotation: '0 0 10', mirror: true, mirrorRot: '0 0 -10' },
+  // 자동 대칭(mirror)을 지우고 좌/우를 직접 지정합니다!
+  { names: ['전완근'], position: '0.648 0.505 -0.257 ', radius: '0.06', scale: '1 5 1', rotation: '0 0 5' },
+  { names: ['전완근'], position: '-0.666 0.457 -0.195', radius: '0.06', scale: '1 5 1', rotation: '0 0 -5' },
+  { names: ['대퇴사두근', '햄스트링', '둔근'], position: '-0.14 0.65 0', radius: '0.11', scale: '1 2 1', mirror: true },
+  { names: ['종아리', '비복근'], position: '-0.14 0.25 -0.04', radius: '0.08', scale: '1 1.8 1', mirror: true },
+
+  // 💡 새로운 부위를 원하시면 아래에 추가하세요!
+  // 예: { names: ['새로운근육'], position: 'x y z', radius: '0.1', scale: '1 1 1' }
+]
+
 function buildBodyHTML(eq) {
-  const c = (name) => getMuscleColor(name, eq)
+  const getCol = (names) => {
+    for (const name of names) {
+      const col = getMuscleColor(name, eq)
+      if (col) return col
+    }
+    return null
+  }
 
-  const chest = c('대흉근')
-  const back = c('광배근')
-  const delt = c('삼각근') ?? c('전면 삼각근') ?? c('후면 삼각근')
-  const upperArm = c('이두근') ?? c('삼두근')
-  const forearm = c('전완근')
-  const abs = c('복근') ?? c('복부')
-  const thigh = c('대퇴사두근') ?? c('햄스트링') ?? c('둔근')
-  const calf = c('종아리') ?? c('비복근')
+  const ov = (col) => col
+    ? `color="${col}" material="opacity: 0.58; transparent: true; depthWrite: false"`
+    : `material="opacity: 0; transparent: true"`
 
-  const ov = (col) =>
-    col
-      ? `color="${col}" material="opacity: 0.58; transparent: true; depthWrite: false"`
-      : `material="opacity: 0; transparent: true"`
+  let overlaysHTML = ''
+
+  MUSCLE_OVERLAYS.forEach(m => {
+    const col = getCol(m.names)
+    const rot = m.rotation ? `rotation="${m.rotation}"` : ''
+
+    // 왼쪽 (또는 중앙)
+    overlaysHTML += `<a-sphere position="${m.position}" radius="${m.radius}" scale="${m.scale}" ${rot} ${ov(col)}></a-sphere>\n`
+
+    // 오른쪽 대칭 처리
+    if (m.mirror) {
+      const [x, y, z] = m.position.split(' ').map(parseFloat)
+      const mirrorPos = `${-x} ${y} ${z}`
+      const mirrorRot = m.mirrorRot ? `rotation="${m.mirrorRot}"` : ''
+      overlaysHTML += `<a-sphere position="${mirrorPos}" radius="${m.radius}" scale="${m.scale}" ${mirrorRot} ${ov(col)}></a-sphere>\n`
+    }
+  })
 
   return `
-    <!-- ══ GLB 인체 모델 (rotation 180° → 카메라 정면) ══ -->
+    <!-- ══ GLB 인체 모델 ══ -->
     <a-entity
       gltf-model="/models/man.glb"
       scale="1.153 1.153 1.153"
@@ -43,50 +74,10 @@ function buildBodyHTML(eq) {
     </a-entity>
 
     <!-- ══ 근육 오버레이 ══ -->
-
-    <!-- 가슴 (대흉근) : 모델 앞 → +Z -->
-    <a-sphere position="0 1.31 0.22" radius="0.26"
-      ${ov(chest)}></a-sphere>
-
-    <!-- 광배근 : 모델 뒤 → -Z -->
-    <a-sphere position="0 1.22 -0.22" radius="0.28"
-      ${ov(back)}></a-sphere>
-
-    <!-- 어깨 (삼각근) -->
-    <a-sphere position="-0.44 1.50 0" radius="0.14"
-      ${ov(delt)}></a-sphere>
-    <a-sphere position=" 0.44 1.50 0" radius="0.14"
-      ${ov(delt)}></a-sphere>
-
-    <!-- 상완 (이두/삼두) - T포즈 수평 -->
-    <a-cylinder position="-0.64 1.38 0" radius="0.10" height="0.32"
-      rotation="0 0 90" ${ov(upperArm)}></a-cylinder>
-    <a-cylinder position=" 0.64 1.38 0" radius="0.10" height="0.32"
-      rotation="0 0 90" ${ov(upperArm)}></a-cylinder>
-
-    <!-- 전완 -->
-    <a-cylinder position="-0.84 1.38 0" radius="0.07" height="0.26"
-      rotation="0 0 90" ${ov(forearm)}></a-cylinder>
-    <a-cylinder position=" 0.84 1.38 0" radius="0.07" height="0.26"
-      rotation="0 0 90" ${ov(forearm)}></a-cylinder>
-
-    <!-- 복근 : 앞 → +Z -->
-    <a-sphere position="0 1.08 0.18" radius="0.19"
-      ${ov(abs)}></a-sphere>
-
-    <!-- 허벅지 -->
-    <a-cylinder position="-0.17 0.73 0" radius="0.13" height="0.44"
-      ${ov(thigh)}></a-cylinder>
-    <a-cylinder position=" 0.17 0.73 0" radius="0.13" height="0.44"
-      ${ov(thigh)}></a-cylinder>
-
-    <!-- 종아리 -->
-    <a-cylinder position="-0.155 0.25 0" radius="0.085" height="0.36"
-      ${ov(calf)}></a-cylinder>
-    <a-cylinder position=" 0.155 0.25 0" radius="0.085" height="0.36"
-      ${ov(calf)}></a-cylinder>
+    ${overlaysHTML}
   `
 }
+
 
 function buildSceneHTML(items) {
   const markersHTML = items.map(eq => {
@@ -119,6 +110,7 @@ export default function ExperiencePhase({ onComplete }) {
   const [activeEquipment, setActiveEquipment] = useState(null)
   const [activeMuscle, setActiveMuscle] = useState(null)
   const [videoOpen, setVideoOpen] = useState(false)
+
   const containerRef = useRef(null)
 
   useEffect(() => {
@@ -154,10 +146,13 @@ export default function ExperiencePhase({ onComplete }) {
       <div
         ref={containerRef}
         className="fixed inset-0"
-        dangerouslySetInnerHTML={{ __html: buildSceneHTML(equipmentList) }}
+        dangerouslySetInnerHTML={{
+          __html: buildSceneHTML(equipmentList)
+        }}
       />
 
-      <div className="absolute inset-0 pointer-events-none">
+      <div className="absolute inset-0 pointer-events-none z-50">
+
         <TopHeader
           equipmentName={activeEquipment?.name}
           detected={!!activeEquipment}

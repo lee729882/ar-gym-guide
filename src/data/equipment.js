@@ -15,7 +15,7 @@ export const equipmentList = [
     primary: ['이두근'],
     secondary: ['전완근'],
     tips: '팔꿈치를 몸통에 고정하고 흔들리지 않도록 합니다. 반동을 사용하지 않고, 덤벨을 내릴 때도 천천히 통제하며 내려야 효과적입니다.',
-    videoUrl: '/videos/dumbbell-curl.mp4',
+    videoUrl: 'https://www.youtube.com/shorts/eyyesvSOg4A',
   },
   {
     id: 'pull-up',
@@ -28,7 +28,7 @@ export const equipmentList = [
     primary: ['광배근'],
     secondary: ['이두근', '후면 삼각근'],
     tips: '어깨를 끌어내리고 가슴을 펴며, 가슴을 바에 가까이 가져간다는 느낌으로 당깁니다. 반동을 사용하지 않습니다.',
-    videoUrl: '/videos/pull-up.mp4',
+    videoUrl: 'https://www.youtube.com/shorts/Ka1uGBFHoRU',
   },
 ]
 

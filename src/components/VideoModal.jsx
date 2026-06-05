@@ -4,6 +4,23 @@
  * 없으면 placeholder 텍스트 표시.
  */
 export default function VideoModal({ videoUrl, onClose }) {
+  // 유튜브 URL인지 확인하고 iframe용 embed URL로 변환
+  const isYouTube = videoUrl?.includes('youtube.com') || videoUrl?.includes('youtu.be');
+  let embedUrl = videoUrl;
+  
+  if (isYouTube && videoUrl) {
+    let videoId = '';
+    if (videoUrl.includes('/shorts/')) {
+      videoId = videoUrl.split('/shorts/')[1].split('?')[0];
+    } else if (videoUrl.includes('watch?v=')) {
+      videoId = videoUrl.split('watch?v=')[1].split('&')[0];
+    } else if (videoUrl.includes('youtu.be/')) {
+      videoId = videoUrl.split('youtu.be/')[1].split('?')[0];
+    }
+    // loop 속성을 위해 playlist 파라미터도 동일한 ID로 추가
+    embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1&loop=1&mute=1&playlist=${videoId}`;
+  }
+
   return (
     <div
       className="absolute inset-0 bg-black/80 backdrop-blur-sm z-50
@@ -32,18 +49,30 @@ export default function VideoModal({ videoUrl, onClose }) {
 
         {/* 영상 영역 */}
         <div className="aspect-video bg-black relative flex items-center justify-center">
-          <video
-            src={videoUrl}
-            autoPlay
-            loop
-            muted
-            playsInline
-            className="w-full h-full object-contain"
-            onError={(e) => { e.target.style.display = 'none' }}>
-          </video>
-          <p className="absolute text-slate-500 text-xs">
-            영상 파일을 public/videos/ 에 추가하세요
-          </p>
+          {isYouTube ? (
+            <iframe
+              src={embedUrl}
+              className="w-full h-full border-0"
+              allow="autoplay; encrypted-media; picture-in-picture"
+              allowFullScreen
+              title="YouTube video"
+            ></iframe>
+          ) : (
+            <>
+              <video
+                src={videoUrl}
+                autoPlay
+                loop
+                muted
+                playsInline
+                className="w-full h-full object-contain"
+                onError={(e) => { e.target.style.display = 'none' }}>
+              </video>
+              <p className="absolute text-slate-500 text-xs -z-10">
+                영상 파일을 public/videos/ 에 추가하세요
+              </p>
+            </>
+          )}
         </div>
       </div>
     </div>
