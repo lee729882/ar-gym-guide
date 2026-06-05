@@ -5,89 +5,82 @@ import FloatingGuideBar from '../components/FloatingGuideBar'
 import MusclePopup from '../components/MusclePopup'
 import VideoModal from '../components/VideoModal'
 
-// 근육 활성화 여부만 판별 (색 불필요)
 function getMuscleColor(name, eq) {
   if (eq.primary.includes(name)) return '#EF4444'
   if (eq.secondary.includes(name)) return '#FACC15'
-  return null // null = 비활성
+  return null
 }
 
 /**
- * GLB 기반 하이브리드 모델.
- * ① /models/man.glb  → 인체 실루엣 (사실감)
- * ② 반투명 오버레이  → 근육 활성화 시각화
- *
- * 좌표 근거: Man.glb 바운딩박스 분석 결과
- *   - 모델 높이 1.561 entity unit → scale 1.153 → 1.8 A-Frame m
- *   - 발 Y 오프셋: -2.864 (발이 마커 위에 정확히 닿도록)
- *   - T포즈: 팔이 수평으로 펼쳐진 해부학적 자세
+ * GLB 하이브리드 모델 v2
+ * - rotation="0 180 0" : 모델이 카메라를 정면으로 바라보도록 수정
+ * - 앞/뒤 오버레이 Z 좌표 교정 (180도 회전 후 앞=+Z, 뒤=-Z)
  */
 function buildBodyHTML(eq) {
   const c = (name) => getMuscleColor(name, eq)
 
-  // ── 각 근육 그룹 활성 색상 ─────────────────────────
-  const chest    = c('대흉근')
-  const back     = c('광배근')
-  const delt     = c('삼각근') ?? c('전면 삼각근') ?? c('후면 삼각근')
+  const chest = c('대흉근')
+  const back = c('광배근')
+  const delt = c('삼각근') ?? c('전면 삼각근') ?? c('후면 삼각근')
   const upperArm = c('이두근') ?? c('삼두근')
-  const forearm  = c('전완근')
-  const abs      = c('복근') ?? c('복부')
-  const thigh    = c('대퇴사두근') ?? c('햄스트링') ?? c('둔근')
-  const calf     = c('종아리') ?? c('비복근')
+  const forearm = c('전완근')
+  const abs = c('복근') ?? c('복부')
+  const thigh = c('대퇴사두근') ?? c('햄스트링') ?? c('둔근')
+  const calf = c('종아리') ?? c('비복근')
 
-  // ── 오버레이 헬퍼: 비활성 시 완전 투명 ──────────────
-  const ov = (col, extra = '') =>
+  const ov = (col) =>
     col
-      ? `color="${col}" material="opacity: 0.58; transparent: true; depthWrite: false" ${extra}`
+      ? `color="${col}" material="opacity: 0.58; transparent: true; depthWrite: false"`
       : `material="opacity: 0; transparent: true"`
 
   return `
-    <!-- ══ ① GLB 인체 모델 ══════════════════════════════════ -->
+    <!-- ══ GLB 인체 모델 (rotation 180° → 카메라 정면) ══ -->
     <a-entity
       gltf-model="/models/man.glb"
       scale="1.153 1.153 1.153"
-      position="0 -2.864 0">
+      position="0 -2.864 0"
+      rotation="0 180 0">
     </a-entity>
 
-    <!-- ══ ② 근육 오버레이 (활성화 시만 불투명) ════════════ -->
+    <!-- ══ 근육 오버레이 ══ -->
 
-    <!-- 가슴 (대흉근) - 앞쪽 -->
-    <a-sphere position="0 1.31 -0.22" radius="0.26"
+    <!-- 가슴 (대흉근) : 모델 앞 → +Z -->
+    <a-sphere position="0 1.31 0.22" radius="0.26"
       ${ov(chest)}></a-sphere>
 
-    <!-- 광배근 - 뒤쪽 -->
-    <a-sphere position="0 1.22 0.22" radius="0.28"
+    <!-- 광배근 : 모델 뒤 → -Z -->
+    <a-sphere position="0 1.22 -0.22" radius="0.28"
       ${ov(back)}></a-sphere>
 
-    <!-- 어깨 (삼각근) - 좌우 -->
+    <!-- 어깨 (삼각근) -->
     <a-sphere position="-0.44 1.50 0" radius="0.14"
       ${ov(delt)}></a-sphere>
     <a-sphere position=" 0.44 1.50 0" radius="0.14"
       ${ov(delt)}></a-sphere>
 
-    <!-- 상완 (이두/삼두) - T포즈 수평, 좌우 -->
+    <!-- 상완 (이두/삼두) - T포즈 수평 -->
     <a-cylinder position="-0.64 1.38 0" radius="0.10" height="0.32"
       rotation="0 0 90" ${ov(upperArm)}></a-cylinder>
     <a-cylinder position=" 0.64 1.38 0" radius="0.10" height="0.32"
       rotation="0 0 90" ${ov(upperArm)}></a-cylinder>
 
-    <!-- 전완 - 수평, 좌우 -->
+    <!-- 전완 -->
     <a-cylinder position="-0.84 1.38 0" radius="0.07" height="0.26"
       rotation="0 0 90" ${ov(forearm)}></a-cylinder>
     <a-cylinder position=" 0.84 1.38 0" radius="0.07" height="0.26"
       rotation="0 0 90" ${ov(forearm)}></a-cylinder>
 
-    <!-- 복근 - 앞쪽 -->
-    <a-sphere position="0 1.08 -0.18" radius="0.19"
+    <!-- 복근 : 앞 → +Z -->
+    <a-sphere position="0 1.08 0.18" radius="0.19"
       ${ov(abs)}></a-sphere>
 
-    <!-- 허벅지 (대퇴사두근 등) - 좌우 -->
+    <!-- 허벅지 -->
     <a-cylinder position="-0.17 0.73 0" radius="0.13" height="0.44"
       ${ov(thigh)}></a-cylinder>
     <a-cylinder position=" 0.17 0.73 0" radius="0.13" height="0.44"
       ${ov(thigh)}></a-cylinder>
 
-    <!-- 종아리 - 좌우 -->
+    <!-- 종아리 -->
     <a-cylinder position="-0.155 0.25 0" radius="0.085" height="0.36"
       ${ov(calf)}></a-cylinder>
     <a-cylinder position=" 0.155 0.25 0" radius="0.085" height="0.36"
@@ -95,10 +88,6 @@ function buildBodyHTML(eq) {
   `
 }
 
-/**
- * equipmentList 전체를 순회해 마커+몸통 HTML을 생성.
- * → DC 마커, PU 마커 동시에 씬에 등록.
- */
 function buildSceneHTML(items) {
   const markersHTML = items.map(eq => {
     const { marker } = eq
@@ -132,7 +121,6 @@ export default function ExperiencePhase({ onComplete }) {
   const [videoOpen, setVideoOpen] = useState(false)
   const containerRef = useRef(null)
 
-  // 각 마커에 이벤트 등록
   useEffect(() => {
     const container = containerRef.current
     if (!container) return
@@ -163,14 +151,12 @@ export default function ExperiencePhase({ onComplete }) {
 
   return (
     <div className="fixed inset-0">
-      {/* AR 레이어 */}
       <div
         ref={containerRef}
         className="fixed inset-0"
         dangerouslySetInnerHTML={{ __html: buildSceneHTML(equipmentList) }}
       />
 
-      {/* UI 오버레이 */}
       <div className="absolute inset-0 pointer-events-none">
         <TopHeader
           equipmentName={activeEquipment?.name}
