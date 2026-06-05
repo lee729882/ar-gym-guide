@@ -109,10 +109,18 @@ function buildSceneHTML(items) {
 `
 }
 
-export default function ExperiencePhase({ onComplete }) {
+export default function ExperiencePhase({ onComplete, isActive = true }) {
   const [activeEquipment, setActiveEquipment] = useState(null)
   const [activeMuscle, setActiveMuscle] = useState(null)
   const [videoOpen, setVideoOpen] = useState(false)
+
+  useEffect(() => {
+    if (!isActive) {
+      setActiveEquipment(null)
+      setActiveMuscle(null)
+      setVideoOpen(false)
+    }
+  }, [isActive])
 
   const containerRef = useRef(null)
 
