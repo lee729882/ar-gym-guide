@@ -122,6 +122,8 @@ public/
 <br/>
 
 ## 🚀 실행 방법
+<img width="512" height="512" alt="KakaoTalk_20260606_003529466" src="https://github.com/user-attachments/assets/87294e24-a5b0-40c3-b03d-b0e5a85b7bef" />
+<img width="512" height="512" alt="KakaoTalk_20260606_003527000" src="https://github.com/user-attachments/assets/d8e82090-67c5-47a9-a57b-6d57c3b75c87" />
 
 ```bash
 # 1. 의존성 설치
@@ -131,8 +133,6 @@ npm install
 npm run dev --host
 
 # 3. HIRO 마커 또는 커스텀 마커(DC/PU)를 화면에 띄우고 접속
-<img width="512" height="512" alt="KakaoTalk_20260606_003529466" src="https://github.com/user-attachments/assets/47b2728a-0d28-4046-97c6-fb742d1fb9d4" />
-<img width="512" height="512" alt="KakaoTalk_20260606_003527000" src="https://github.com/user-attachments/assets/acb4e5ee-f05b-4bcd-814d-a8df53d4882e" />
 
 ```
 
