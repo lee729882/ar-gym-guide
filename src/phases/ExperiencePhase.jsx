@@ -5,109 +5,93 @@ import FloatingGuideBar from '../components/FloatingGuideBar'
 import MusclePopup from '../components/MusclePopup'
 import VideoModal from '../components/VideoModal'
 
-const SKIN = '#E8C7A0'
-
+// 근육 활성화 여부만 판별 (색 불필요)
 function getMuscleColor(name, eq) {
   if (eq.primary.includes(name)) return '#EF4444'
   if (eq.secondary.includes(name)) return '#FACC15'
-  return SKIN
+  return null // null = 비활성
 }
 
 /**
- * 기구별 근육 색상에 맞춘 인체 HTML 생성.
- * 개선: 패치 제거 → 세그먼트 직접 채색 / roughness 피부 재질 / 자연스러운 팔 각도
+ * GLB 기반 하이브리드 모델.
+ * ① /models/man.glb  → 인체 실루엣 (사실감)
+ * ② 반투명 오버레이  → 근육 활성화 시각화
+ *
+ * 좌표 근거: Man.glb 바운딩박스 분석 결과
+ *   - 모델 높이 1.561 entity unit → scale 1.153 → 1.8 A-Frame m
+ *   - 발 Y 오프셋: -2.864 (발이 마커 위에 정확히 닿도록)
+ *   - T포즈: 팔이 수평으로 펼쳐진 해부학적 자세
  */
 function buildBodyHTML(eq) {
   const c = (name) => getMuscleColor(name, eq)
 
-  // ── 각 세그먼트에 적용할 색상 결정 ──────────────────────────
-  const chestCol = c('대흉근')
-  const backCol = c('광배근')
-  const deltCol = [c('삼각근'), c('전면 삼각근'), c('후면 삼각근')]
-    .find(v => v !== SKIN) ?? SKIN
-  // 상완: 이두 우선, 없으면 삼두, 없으면 피부색
-  const upperArmCol = c('이두근') !== SKIN ? c('이두근')
-    : c('삼두근') !== SKIN ? c('삼두근')
-      : SKIN
-  const forearmCol = c('전완근')
-  // 허벅지: 대퇴사두 > 햄스트링 > 둔근
-  const thighCol = [c('대퇴사두근'), c('햄스트링'), c('둔근')]
-    .find(v => v !== SKIN) ?? SKIN
-  const calfCol = [c('종아리'), c('비복근')].find(v => v !== SKIN) ?? SKIN
-  // 몸통 앞면 색 (가슴 우선, 없으면 등)
-  const torsoCol = chestCol !== SKIN ? chestCol
-    : backCol !== SKIN ? backCol
-      : SKIN
+  // ── 각 근육 그룹 활성 색상 ─────────────────────────
+  const chest    = c('대흉근')
+  const back     = c('광배근')
+  const delt     = c('삼각근') ?? c('전면 삼각근') ?? c('후면 삼각근')
+  const upperArm = c('이두근') ?? c('삼두근')
+  const forearm  = c('전완근')
+  const abs      = c('복근') ?? c('복부')
+  const thigh    = c('대퇴사두근') ?? c('햄스트링') ?? c('둔근')
+  const calf     = c('종아리') ?? c('비복근')
 
-  // 공통 피부 재질 (매트한 느낌)
-  const mat = `material="roughness: 0.85; metalness: 0.0; shader: standard"`
+  // ── 오버레이 헬퍼: 비활성 시 완전 투명 ──────────────
+  const ov = (col, extra = '') =>
+    col
+      ? `color="${col}" material="opacity: 0.58; transparent: true; depthWrite: false" ${extra}`
+      : `material="opacity: 0; transparent: true"`
 
   return `
-    <!-- ── 머리 ── -->
-    <a-sphere position="0 2.08 0" radius="0.195" color="${SKIN}" ${mat}></a-sphere>
-    <!-- 귀 (볼륨감) -->
-    <a-sphere position="-0.195 2.08 0" radius="0.045" color="${SKIN}" ${mat}></a-sphere>
-    <a-sphere position=" 0.195 2.08 0" radius="0.045" color="${SKIN}" ${mat}></a-sphere>
-    <!-- 목 -->
-    <a-cylinder position="0 1.89 0" radius="0.068" height="0.14" color="${SKIN}" ${mat}></a-cylinder>
+    <!-- ══ ① GLB 인체 모델 ══════════════════════════════════ -->
+    <a-entity
+      gltf-model="/models/man.glb"
+      scale="1.153 1.153 1.153"
+      position="0 -2.864 0">
+    </a-entity>
 
-    <!-- ── 어깨 (삼각근) ── -->
-    <a-sphere position="-0.36 1.75 0" radius="0.115" color="${deltCol}" ${mat}></a-sphere>
-    <a-sphere position=" 0.36 1.75 0" radius="0.115" color="${deltCol}" ${mat}></a-sphere>
+    <!-- ══ ② 근육 오버레이 (활성화 시만 불투명) ════════════ -->
 
-    <!-- ── 몸통 ── -->
-    <!-- 상부 (가슴/광배) -->
-    <a-cylinder position="0 1.60 0" radius="0.275" height="0.30" color="${torsoCol}" ${mat}></a-cylinder>
-    <!-- 복부 -->
-    <a-cylinder position="0 1.32 0" radius="0.240" height="0.28" color="${SKIN}" ${mat}></a-cylinder>
-    <!-- 골반 -->
-    <a-cylinder position="0 1.10 0" radius="0.265" height="0.22" color="${SKIN}" ${mat}></a-sphere>
+    <!-- 가슴 (대흉근) - 앞쪽 -->
+    <a-sphere position="0 1.31 -0.22" radius="0.26"
+      ${ov(chest)}></a-sphere>
 
-    <!-- ── 왼팔 (약간 벌린 자연스러운 자세) ── -->
-    <!-- 상완 -->
-    <a-cylinder position="-0.48 1.50 0" radius="0.078" height="0.42"
-      rotation="0 0 18" color="${upperArmCol}" ${mat}></a-cylinder>
-    <!-- 팔꿈치 -->
-    <a-sphere position="-0.535 1.27 0" radius="0.060" color="${SKIN}" ${mat}></a-sphere>
-    <!-- 전완 -->
-    <a-cylinder position="-0.575 1.02 0" radius="0.058" height="0.42"
-      rotation="0 0 10" color="${forearmCol}" ${mat}></a-cylinder>
-    <!-- 손목·손 -->
-    <a-sphere position="-0.605 0.79 0" radius="0.046" color="${SKIN}" ${mat}></a-sphere>
-    <a-box position="-0.610 0.70 0" width="0.090" height="0.115" depth="0.055"
-      color="${SKIN}" ${mat}></a-box>
+    <!-- 광배근 - 뒤쪽 -->
+    <a-sphere position="0 1.22 0.22" radius="0.28"
+      ${ov(back)}></a-sphere>
 
-    <!-- ── 오른팔 ── -->
-    <a-cylinder position=" 0.48 1.50 0" radius="0.078" height="0.42"
-      rotation="0 0 -18" color="${upperArmCol}" ${mat}></a-cylinder>
-    <a-sphere position=" 0.535 1.27 0" radius="0.060" color="${SKIN}" ${mat}></a-sphere>
-    <a-cylinder position=" 0.575 1.02 0" radius="0.058" height="0.42"
-      rotation="0 0 -10" color="${forearmCol}" ${mat}></a-cylinder>
-    <a-sphere position=" 0.605 0.79 0" radius="0.046" color="${SKIN}" ${mat}></a-sphere>
-    <a-box position=" 0.610 0.70 0" width="0.090" height="0.115" depth="0.055"
-      color="${SKIN}" ${mat}></a-box>
+    <!-- 어깨 (삼각근) - 좌우 -->
+    <a-sphere position="-0.44 1.50 0" radius="0.14"
+      ${ov(delt)}></a-sphere>
+    <a-sphere position=" 0.44 1.50 0" radius="0.14"
+      ${ov(delt)}></a-sphere>
 
-    <!-- ── 허벅지 ── -->
-    <a-cylinder position="-0.155 0.76 0" radius="0.102" height="0.46"
-      color="${thighCol}" ${mat}></a-cylinder>
-    <a-cylinder position=" 0.155 0.76 0" radius="0.102" height="0.46"
-      color="${thighCol}" ${mat}></a-cylinder>
-    <!-- 무릎 -->
-    <a-sphere position="-0.155 0.51 0" radius="0.068" color="${SKIN}" ${mat}></a-sphere>
-    <a-sphere position=" 0.155 0.51 0" radius="0.068" color="${SKIN}" ${mat}></a-sphere>
+    <!-- 상완 (이두/삼두) - T포즈 수평, 좌우 -->
+    <a-cylinder position="-0.64 1.38 0" radius="0.10" height="0.32"
+      rotation="0 0 90" ${ov(upperArm)}></a-cylinder>
+    <a-cylinder position=" 0.64 1.38 0" radius="0.10" height="0.32"
+      rotation="0 0 90" ${ov(upperArm)}></a-cylinder>
 
-    <!-- ── 종아리 ── -->
-    <a-cylinder position="-0.145 0.26 0" radius="0.065" height="0.44"
-      color="${calfCol}" ${mat}></a-cylinder>
-    <a-cylinder position=" 0.145 0.26 0" radius="0.065" height="0.44"
-      color="${calfCol}" ${mat}></a-cylinder>
-    <!-- 발목·발 -->
-    <a-sphere position="-0.145 0.03 0" radius="0.050" color="${SKIN}" ${mat}></a-sphere>
-    <a-sphere position=" 0.145 0.03 0" radius="0.050" color="${SKIN}" ${mat}></a-sphere>
-    <a-box position="-0.135 0.015 0.075" width="0.105" height="0.065" depth="0.235"
-      color="${SKIN}" ${mat}></a-box>
-    <a-box position=" 0.135 0.015 0.075" width="0.105" height="0.065" depth="0.235"
-      color="${SKIN}" ${mat}></a-box>
+    <!-- 전완 - 수평, 좌우 -->
+    <a-cylinder position="-0.84 1.38 0" radius="0.07" height="0.26"
+      rotation="0 0 90" ${ov(forearm)}></a-cylinder>
+    <a-cylinder position=" 0.84 1.38 0" radius="0.07" height="0.26"
+      rotation="0 0 90" ${ov(forearm)}></a-cylinder>
+
+    <!-- 복근 - 앞쪽 -->
+    <a-sphere position="0 1.08 -0.18" radius="0.19"
+      ${ov(abs)}></a-sphere>
+
+    <!-- 허벅지 (대퇴사두근 등) - 좌우 -->
+    <a-cylinder position="-0.17 0.73 0" radius="0.13" height="0.44"
+      ${ov(thigh)}></a-cylinder>
+    <a-cylinder position=" 0.17 0.73 0" radius="0.13" height="0.44"
+      ${ov(thigh)}></a-cylinder>
+
+    <!-- 종아리 - 좌우 -->
+    <a-cylinder position="-0.155 0.25 0" radius="0.085" height="0.36"
+      ${ov(calf)}></a-cylinder>
+    <a-cylinder position=" 0.155 0.25 0" radius="0.085" height="0.36"
+      ${ov(calf)}></a-cylinder>
   `
 }
 
