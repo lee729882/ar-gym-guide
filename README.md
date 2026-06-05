@@ -20,6 +20,10 @@
 | 시작 화면 | AR 인식 (풀업) | AR 인식 (덤벨컬) | 영상 모달 |
 |:---:|:---:|:---:|:---:|
 | EntryPhase | 광배근 하이라이트 | 이두근 하이라이트 | YouTube 시범 영상 |
+<img width="590" height="1278" alt="KakaoTalk_20260605_233602626" src="https://github.com/user-attachments/assets/3d691404-d40e-4904-97cc-b3fe049f7437" />
+<img width="590" height="1278" alt="KakaoTalk_20260606_022203323" src="https://github.com/user-attachments/assets/3ffdff97-9272-40ee-be0d-d85abee255df" />
+<img width="590" height="1278" alt="KakaoTalk_20260606_022203323_03" src="https://github.com/user-attachments/assets/2c894946-fe7d-4061-ba64-a4eecb405539" />
+<img width="590" height="1278" alt="KakaoTalk_20260606_022203323_01" src="https://github.com/user-attachments/assets/b616cfe6-e2c1-480b-8736-b2316002752f" />
 
 <br/>
 
@@ -127,6 +131,9 @@ npm install
 npm run dev --host
 
 # 3. HIRO 마커 또는 커스텀 마커(DC/PU)를 화면에 띄우고 접속
+<img width="512" height="512" alt="KakaoTalk_20260606_003529466" src="https://github.com/user-attachments/assets/47b2728a-0d28-4046-97c6-fb742d1fb9d4" />
+<img width="512" height="512" alt="KakaoTalk_20260606_003527000" src="https://github.com/user-attachments/assets/acb4e5ee-f05b-4bcd-814d-a8df53d4882e" />
+
 ```
 
 > ⚠️ 카메라 API는 **HTTPS 환경에서만 작동**합니다. 모바일 테스트 시 Vercel 배포 URL(`https://ar-gym-guide.vercel.app`)을 사용하세요.
