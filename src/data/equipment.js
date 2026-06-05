@@ -15,7 +15,7 @@ export const equipmentList = [
     primary: ['이두근'],
     secondary: ['전완근'],
     tips: '팔꿈치를 몸통에 고정하고 흔들리지 않도록 합니다. 반동을 사용하지 않고, 덤벨을 내릴 때도 천천히 통제하며 내려야 효과적입니다.',
-    videoUrl: 'https://www.youtube.com/shorts/eyyesvSOg4A',
+    videoUrl: 'https://www.youtube.com/shorts/2aRqFWIvXf4',
   },
   {
     id: 'pull-up',
